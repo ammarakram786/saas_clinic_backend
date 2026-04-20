@@ -3,10 +3,12 @@ class AuditBase:
     def _get_user_info(user):
         if not user:
             return None
+        get_full_name = getattr(user, 'get_full_name', None)
+        full_name = get_full_name() if callable(get_full_name) else None
         return {
             'id': user.id,
-            'username': user.username,
-            'full_name': user.get_full_name() or user.username
+            'username': getattr(user, 'username', None) or getattr(user, 'email', None),
+            'full_name': full_name or getattr(user, 'username', None) or getattr(user, 'email', ''),
         }
 
     @classmethod
@@ -19,7 +21,6 @@ class AuditBase:
 
 
 class AuditMixin:
-
     def to_representation(self, instance):
         data = super().to_representation(instance)
         return AuditBase.attach_audit_fields(instance, data)
