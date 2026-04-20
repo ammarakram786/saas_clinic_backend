@@ -1,0 +1,23 @@
+*.pyc
+.idea
+
+
+# Virtual environments
+/myenv
+/train_venv
+/logs
+/.venv/
+/venv/
+
+
+# config files
+config.ini
+
+
+# Migrations
+/account/migrations
+
+/staticfiles/
+
+
+db.sqlite3
