@@ -15,5 +15,6 @@ urlpatterns = [
     path('auth/me/', CurrentUserView.as_view(), name='current-user'),
     path('permissions/', PermissionListView.as_view(), name='permission-list'),
 
+
     path('', include(router.urls)),
 ]
