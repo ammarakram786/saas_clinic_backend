@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from account.models import User
+from control.context import get_current_tenant
+from account.models import User, TenantMembership
 from django.contrib.auth.password_validation import validate_password
 from .role_serializer import RoleMinSerializer
 
@@ -16,8 +17,40 @@ class UserSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         rep = super().to_representation(instance)
         rep['role'] = RoleMinSerializer(instance.role).data if instance.role else None
+        tenant = get_current_tenant()
+        if tenant is not None:
+            membership = (
+                TenantMembership.objects.select_related('role')
+                .filter(user=instance, tenant=tenant, is_active=True)
+                .first()
+            )
+            rep['tenant_role'] = (
+                RoleMinSerializer(membership.role).data
+                if membership and membership.role else None
+            )
+        else:
+            rep['tenant_role'] = None
 
         return rep
+
+    def create(self, validated_data):
+        password = validated_data.pop('password', None)
+        user = User(**validated_data)
+        if password:
+            user.set_password(password)
+        else:
+            user.set_unusable_password()
+        user.save()
+        return user
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+        for field, value in validated_data.items():
+            setattr(instance, field, value)
+        if password:
+            instance.set_password(password)
+        instance.save()
+        return instance
 
 
 class ChangePasswordSerializer(serializers.Serializer):
@@ -41,4 +74,4 @@ class ChangePasswordSerializer(serializers.Serializer):
 class UserMinSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'name')
+        fields = ('id', 'username', 'email')

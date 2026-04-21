@@ -2,9 +2,13 @@ from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
-def get_tokens_for_user(user):
+def get_tokens_for_user(user, tenant_id=None, membership_id=None):
     """Generate JWT access and refresh tokens for a user."""
     refresh = RefreshToken.for_user(user)
+    if tenant_id is not None:
+        refresh['tenant_id'] = str(tenant_id)
+    if membership_id is not None:
+        refresh['membership_id'] = str(membership_id)
     return {
         'access': str(refresh.access_token),
         'refresh': str(refresh),

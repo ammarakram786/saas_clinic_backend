@@ -22,7 +22,18 @@ class DynamicRolePermission(permissions.BasePermission):
         if not user or not user.is_authenticated:
             return False
 
-        role = getattr(user, 'role', None)
+        role = None
+        membership = getattr(request, 'tenant_membership', None)
+        if request.path.startswith('/api/account/') and membership is None:
+            # Tenant-plane endpoints require resolved tenant membership.
+            return False
+
+        if membership is not None:
+            role = getattr(membership, 'role', None)
+
+        if role is None:
+            role = getattr(user, 'role', None)
+
         if role is None:
             return False
 

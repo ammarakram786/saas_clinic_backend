@@ -1,0 +1,35 @@
+---
+description: SaaS clinic backend — stack, apps, and tenancy conventions
+alwaysApply: true
+---
+
+# SaaS clinic backend
+
+## Stack
+
+- **Django 6** + **Django REST Framework** + **drf-spectacular** (OpenAPI at `/api/schema/`, Swagger at `/api/docs/`)
+- **PostgreSQL** (`psycopg`), **Redis** (`django-redis`), **JWT** (`djangorestframework_simplejwt`, platform auth in `control`)
+- Config: **django-environ**; settings under [`backend/settings/`](backend/settings/)
+
+## Apps
+
+- **`account`** — tenant-plane `User` (`AUTH_USER_MODEL = 'account.User'`). API prefix: `/api/account/`.
+- **`control`** — control plane: tenants, packages/features, subscriptions, entitlements, `PlatformUser` + RBAC, audit. API prefix: `/api/platform/`. Django admin registrations live in [`control/admin.py`](control/admin.py).
+- **`util`** — shared helpers/mixins.
+
+Do **not** rename the top-level Python package to `platform` — it shadows the stdlib `platform` module (see [`control/apps.py`](control/apps.py)).
+
+## Two auth planes
+
+- **Platform staff**: `PlatformUser`, permission class `IsPlatformStaff` ([`control/permissions.py`](control/permissions.py)), routes under `/api/platform/`.
+- **Tenant users**: `account.User`, routes under `/api/account/`.
+
+## Request context
+
+- [`control.middleware.TenantMiddleware`](control/middleware.py) and [`AuditContextMiddleware`](control/middleware.py) run after Django auth (see [`backend/settings/base.py`](backend/settings/base.py)).
+- Tenant-scoped models use [`control.context`](control/context.py) and [`TenantScopedManager`](control/managers/tenant_scoped.py); string FK labels use the `control` app label (e.g. `'control.Tenant'`).
+
+## Edits
+
+- Match existing patterns in the touched app; avoid drive-by refactors or unrelated files.
+- Prefer small, focused changes; run `manage.py check` (and tests) when behavior changes.

@@ -6,3 +6,4 @@ from .permission_list_view import PermissionListView
 from .role_view_set import RoleViewSet
 from .user_view_set import UserViewSet
 from .user_list_view_set import UserListViewSet
+from .profile_view_set import ProfileViewSet

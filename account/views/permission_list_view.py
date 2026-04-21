@@ -1,5 +1,6 @@
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
+from account.permissions import IsTenantStaff
 from account.models import Permission
 from account.serializers import PermissionSerializer
 
@@ -12,5 +13,5 @@ class PermissionListView(ListAPIView):
         return PermissionSerializer
 
     def get_permissions(self):
-        return (IsAuthenticated,)
+        return (IsAuthenticated(), IsTenantStaff(),)
 

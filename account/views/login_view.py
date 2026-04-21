@@ -19,17 +19,28 @@ class LoginView(APIView):
         serializer = LoginSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
+        membership = serializer.validated_data['membership']
 
         response = Response()
 
-        token = get_tokens_for_user(user)
+        token = get_tokens_for_user(
+            user,
+            tenant_id=membership.tenant_id,
+            membership_id=membership.pk,
+        )
         set_access_cookies(response, token['access'])
         set_refresh_cookies(response, token['refresh'])
 
         response['X-CSRFToken'] = csrf.get_token(request)
 
         data = UserSerializer(user, context={'request': request}).data
-        data['permissions'] = combine_role_permissions(user.role)
+        data['tenant'] = {
+            'id': membership.tenant_id,
+            'name': membership.tenant.name,
+            'slug': membership.tenant.slug,
+        }
+        data['membership_id'] = membership.pk
+        data['permissions'] = combine_role_permissions(membership.role)
 
         response.status_code = status.HTTP_200_OK
         response.data = {'msg': 'Login successfully', 'user': data}

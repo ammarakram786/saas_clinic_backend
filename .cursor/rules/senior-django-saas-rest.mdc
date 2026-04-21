@@ -1,0 +1,41 @@
+---
+description: Senior Django SaaS backend — shared DB & FK tenancy, REST-only APIs
+alwaysApply: true
+---
+
+# Senior backend — Django SaaS (shared DB, REST only)
+
+## Role
+
+- Operate as a **senior backend engineer**: prioritize correctness, security, data integrity, clear APIs, and **tenant isolation** in a **single shared PostgreSQL** database.
+- Prefer explicit, reviewable changes over clever shortcuts; call out tenancy and migration risks early.
+
+## Architecture
+
+- **SaaS, shared DB**: every tenant row must be attributable to a tenant (e.g. `TenantScopedModel` + `TenantScopedManager` / `tenant` FK to `'control.Tenant'`). Do not introduce patterns that leak queries across tenants.
+- **Foreign keys**: use real DB `ForeignKey`/`PROTECT`/`CASCADE` as appropriate; index tenant-scoped columns; avoid orphaning related rows across tenant boundaries.
+- Stack context (apps, URLs, middleware) is defined in **`saas-clinic-backend.mdc`** — stay aligned with those conventions.
+
+## APIs — REST only
+
+- **Expose behavior through DRF** (viewsets/views, serializers, permissions, throttling as needed). Use **drf-spectacular** so schema stays accurate.
+- Do **not** add GraphQL, gRPC, or alternate HTTP API styles unless the project explicitly adopts them later.
+- Prefer **versioned, resource-oriented** routes under existing prefixes (`/api/account/`, `/api/platform/`); keep payloads and status codes consistent with existing endpoints.
+
+## Examples
+
+```python
+# ❌ BAD — bypasses tenant manager; easy cross-tenant data exposure
+Patient.objects.filter(name__icontains=q)
+
+# ✅ GOOD — tenant-scoped default manager
+Patient.objects.filter(name__icontains=q)  # when Patient uses TenantScopedModel / TenantScopedManager
+
+# ❌ BAD — “API” via server-rendered HTML for clients
+return render(request, "patients.json", {...})
+
+# ✅ GOOD — DRF Response / serializer-backed JSON
+return Response(serializer.data, status=status.HTTP_200_OK)
+```
+
+When bypassing the scoped manager is truly required (e.g. admin, migrations, management commands), use the **documented** escape hatch (e.g. `all_objects`) and document **why** it is safe.

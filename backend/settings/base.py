@@ -52,7 +52,7 @@ INSTALLED_APPS = [
 
     'account',
     'util',
-    'platform_ctrl',
+    'control',
 ]
 
 MIDDLEWARE = [
@@ -65,8 +65,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
-    'platform_ctrl.middleware.AuditContextMiddleware',
-    'platform_ctrl.middleware.TenantMiddleware',
+    'control.middleware.AuditContextMiddleware',
+    'control.middleware.TenantMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -140,7 +140,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'account.authentication.JWTCookieAuthentication',
-        'platform_ctrl.authentication.PlatformJWTCookieAuthentication',
+        'control.authentication.PlatformJWTCookieAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',

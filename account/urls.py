@@ -6,7 +6,7 @@ router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
 router.register(r'users-list', UserListViewSet, basename='user-list')
 router.register(r'roles', RoleViewSet, basename='role')
-router.register(r'profiles', RoleViewSet, basename='profile')
+router.register(r'profiles', ProfileViewSet, basename='profile')
 
 urlpatterns = [
     path('auth/login/', LoginView.as_view(), name='login'),
